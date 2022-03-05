@@ -4,29 +4,61 @@ import json
 from colors import COLORS
 import cv2
 from tqdm import tqdm
+from pdb import set_trace as st
+import shutil
 
 class MultiObjectTracker():
-    def __init__(self, input_filepath, input_bbox_json_filepath, output_filepath, verbose=False):
-        self.verbose = verbose
-        assert input_filepath[-3:] == 'mp4', 'Only mp4 format is accepted'
-        os.makedirs(output_filepath, exist_ok=True)
-        self.tracked_objects = self.parse_hbox_json(input_bbox_json_filepath)
-        self.video_in = cv2.VideoCapture(input_filepath)
+    def __init__(self,
+        input_filepath,
+        input_bbox_json_filepath,
+        tracking_method,
+        output_filepath,
+        verbose=True):
 
-        # Create VideoWriter for output
-        frame_width  = self.video_in.get(3)
-        frame_height = self.video_in.get(4)
+        # Validation
+        assert input_filepath[-3:] == 'mp4', 'Only mp4 format is accepted'
+
+        # Initialization
+        self.verbose = verbose
+        self.tracking_method = tracking_method
+        self.input_filepath = input_filepath
+        self.output_filepath = output_filepath
+        self.video_in = cv2.VideoCapture(input_filepath)
+        
+        self.tracked_objects = self.parse_hbox_json(input_bbox_json_filepath)
+        self.print_initial_message()
+        self.create_video_writer_for_output()
+        self.initialize_trackers()
+
+    def print_initial_message(self):
+        self.print_if_verbose(
+            'Loading MultiObjectTracker:\n' + \
+            '  > Input file: {}\n'.format(self.input_filepath) + \
+            '  > Output file: {}\n'.format(self.output_filepath) + \
+            '  > Tracking method: {}\n'.format(self.tracking_method) + \
+            '  > Number of objects: {}\n'.format(len(self.tracked_objects)))
+
+    def create_video_writer_for_output(self):
+        os.makedirs(os.path.dirname(self.output_filepath), exist_ok=True)
+        # Get metadata from input video to determine output video
+        # frame_width  = self.video_in.get(3)
+        # frame_height = self.video_in.get(4)
         cap_fps = self.video_in.get(cv2.CAP_PROP_FPS)
+        frame_width, frame_height = self.get_frame_dimensions()
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        self.video_out = cv2.VideoWriter(self.output_filepath, fourcc, cap_fps,(frame_width,frame_height))
+
+    def get_frame_dimensions(self):
         frame_width = int(self.video_in.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(self.video_in.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        self.video_out = cv2.VideoWriter('out.mp4', fourcc, cap_fps,(frame_width,frame_height))
+        return frame_width, frame_height
 
-        # Initialize trackers
+    def initialize_trackers(self):
         _, init_frame = self.video_in.read()
         self.number_of_frames = int(self.video_in.get(cv2.CAP_PROP_FRAME_COUNT))
         for a_tracked_object in self.tracked_objects:
             a_tracked_object.initialize_tracker(init_frame)
+        cv2.imwrite('init_frame.png', init_frame)
 
     def parse_hbox_json(self, input_bbox_json_filepath):
         '''
@@ -44,7 +76,8 @@ class MultiObjectTracker():
             'Insufficient number of colors for the objects to track'
 
         for a_bbox_dict, a_color in zip(list_of_dicts, COLORS):
-            list_of_tracked_objects.append(TrackedObject(a_bbox_dict, a_color))
+            list_of_tracked_objects.append(
+                TrackedObject(a_bbox_dict, a_color, self))
         # TODO: Check that there are no two objects with the same name and id
         return list_of_tracked_objects
     
@@ -67,7 +100,14 @@ class MultiObjectTracker():
 
         if self.verbose:
             self.print_final_report()
+        
+        return [a_tracked_obj.get_success_rate() \
+            for a_tracked_obj in self.tracked_objects]
 
-    def print_final_report(self, tracked_objects):
-        for a_tracked_object in tracked_objects:
+    def print_final_report(self):
+        for a_tracked_object in self.tracked_objects:
             a_tracked_object.print_report()
+    
+    def print_if_verbose(self, text):
+        if self.verbose:
+            print(text)
