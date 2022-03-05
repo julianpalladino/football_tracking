@@ -1,4 +1,5 @@
 MINIMUM_CONTOUR_AREA = 150
 VERBOSE = False
-TRACKER = 'goturn'
-POSSIBLE_TRACKERS = ['goturn', 'csrt', 'mil', 'boosting', 'mosse', 'medianflow']
+TRACKER_METHOD = 'dasiamrpn'
+TRACKER_METHODS = ['dasiamrpn', 'tld', 'kcf', 'goturn',
+    'csrt', 'mil', 'boosting', 'mosse', 'medianflow']
