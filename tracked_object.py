@@ -1,7 +1,7 @@
 import config
 import cv2
-from pdb import set_trace as st
 import utils
+
 
 class TrackedObject():
     def __init__(self, a_bbox_dict, a_color, multi_object_tracker):
@@ -10,7 +10,7 @@ class TrackedObject():
         self.id = a_bbox_dict['id']
         self.set_bbox(a_bbox_dict)
         self.color = a_color
-        
+
         print('Using tracker {}'.format(multi_object_tracker.tracking_method))
         if multi_object_tracker.tracking_method == 'medianflow':
             self.tracker = cv2.legacy.TrackerMedianFlow_create()
@@ -34,16 +34,18 @@ class TrackedObject():
             raise RuntimeError('Tracker {} not recognized. Options: {}'.format(
                 multi_object_tracker.tracking_method, config.TRACKER_METHODS
             ))
-    
+
     def set_bbox(self, a_bbox_dict):
-        assert len(a_bbox_dict['object']) > 0, "Object's name shouldn't be empty"
+        assert len(a_bbox_dict['object']
+                   ) > 0, "Object's name shouldn't be empty"
         assert type(a_bbox_dict['id']) == int, 'Object ID should be an int'
-        assert type(a_bbox_dict['coordinates']) == list, 'Object coordinates should be a list'
+        assert type(a_bbox_dict['coordinates']
+                    ) == list, 'Object coordinates should be a list'
         assert all(type(elem) == int for elem in a_bbox_dict['coordinates']), \
             "All elems in object's coordinates should be ints"
         a_bbox_dict
         self.bbox = tuple(self.bound_bbox(a_bbox_dict['coordinates']))
-    
+
     def bound_bbox(self, bbox):
         def bound_value(value, min_bound, max_bound):
             value = min(value, max_bound)
@@ -51,7 +53,7 @@ class TrackedObject():
             return value
 
         frame_width, frame_height = self.multi_object_tracker.get_frame_dimensions()
-        
+
         # Limit bbox position
         bbox = [
             bound_value(bbox[0], 0, frame_width),
@@ -78,7 +80,8 @@ class TrackedObject():
 
     def annotate_frame(self, frame):
         p1 = (int(self.bbox[0]), int(self.bbox[1]))
-        p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
+        p2 = (int(self.bbox[0] + self.bbox[2]),
+              int(self.bbox[1] + self.bbox[3]))
         cv2.rectangle(frame, p1, p2, self.color, 2, 1)
         utils.draw_text(
             frame,
@@ -87,13 +90,13 @@ class TrackedObject():
 
     def update_tracker(self, frame, frame_number):
         success, self.bbox = self.tracker.update(frame)
-        self.total_frames +=1
-        
+        self.total_frames += 1
+
         if success:
             self.annotate_frame(frame)
             self.successfully_tracked_frames += 1
         return frame
-    
+
     def get_success_rate(self):
         return self.successfully_tracked_frames / self.total_frames * 100
 

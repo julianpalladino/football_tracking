@@ -1,31 +1,27 @@
-from functools import total_ordering
-from sre_constants import SUCCESS
-import cv2
-import os
-import ffmpeg
-from pdb import set_trace as st # For debugging
 import config
-import json
-from tqdm import tqdm
-from colors import COLORS
-from tracked_object import TrackedObject
 from object_tracker import MultiObjectTracker
-           
+import argparse
+
 
 def main():
-    # input_filepath = os.path.join('data', 'messi.mp4')
-    # input_bbox_json_filepath = os.path.join('data', 'messi1_initial_conditions.json')
-    # input_filepath = os.path.join('data', 'maradona_1986.mp4')
-    # input_bbox_json_filepath = os.path.join('data', 'maradona_1986_initial_conditions.json')
-    input_filepath = os.path.join('data', 'messi2.mp4')
-    input_bbox_json_filepath = os.path.join('data', 'messi2_initial_conditions.json')
-    # input_filepath = os.path.join('data', 'messi3.mp4')
-    # input_bbox_json_filepath = os.path.join('data', 'messi3_initial_conditions.json')
+    parser = argparse.ArgumentParser(description='Track football players')
+    parser.add_argument('input_path', action='store',
+                        type=str, help='Input video filepath')
+    parser.add_argument('input_bbox_path', action='store',
+                        type=str, help='Input bbox json filepath')
+    parser.add_argument('output_path', action='store',
+                        type=str, help='Output video filepath')
+    parser.add_argument('method', action='store', type=str,
+                        help='Tracking method. Can be one of the following: {}'.format(config.TRACKER_METHODS))
+    args = parser.parse_args()
 
-    object_tracker = MultiObjectTracker(input_filepath, input_bbox_json_filepath, 'output/out.mp4')
+    object_tracker = MultiObjectTracker(
+        args.input_path,
+        args.input_bbox_path,
+        args.method,
+        args.output_path)
     object_tracker.run_tracking()
 
 
 if __name__ == '__main__':
-    # convert_all_data_from_mkv_to_mp4('data')
     main()
