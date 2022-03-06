@@ -14,8 +14,8 @@ test_filenames = ['messi1', 'messi2', 'messi3', 'maradona_1986']
 @pytest.mark.parametrize('tracking_method', config.TRACKER_METHODS)
 def test01_all_methods_should_reach_minimum_success_rate(filename, tracking_method):
     object_tracker = MultiObjectTracker(
-        os.path.join('data', filename + '.mp4'),
-        os.path.join('data', filename + '_initial_conditions.json'),
+        os.path.join('/app/data', filename + '.mp4'),
+        os.path.join('/app/data', filename + '_initial_conditions.json'),
         tracking_method,
         os.path.join('test_output', filename, '{}.mp4'.format(tracking_method)))
     success_rates = object_tracker.run_tracking()

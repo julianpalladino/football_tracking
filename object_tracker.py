@@ -7,6 +7,19 @@ from tqdm import tqdm
 
 
 class MultiObjectTracker():
+    '''
+    Class which loads video, keeps track of all tracked objects, annotates
+    the video and saves it
+
+    Parameters
+    ----------
+    input_filepath: str, filepath for input mp4 video
+    input_bbox_json_filepath: str, filepath for input json file with bbox data
+    tracking_method: str, determines which tracker method to use. See config.py
+        for all possible methods
+    output_filepath: str, filepath for output annotated mp4 video
+    verbose: bool, allows additional printing
+    '''
     def __init__(self,
                  input_filepath,
                  input_bbox_json_filepath,
@@ -30,6 +43,9 @@ class MultiObjectTracker():
         self.initialize_trackers()
 
     def print_initial_message(self):
+        '''
+        Prints initial message if self.verbose is True
+        '''
         self.print_if_verbose(
             'Loading MultiObjectTracker:\n' +
             '  > Input file: {}\n'.format(self.input_filepath) +
@@ -38,6 +54,9 @@ class MultiObjectTracker():
             '  > Number of objects: {}\n'.format(len(self.tracked_objects)))
 
     def create_video_writer_for_output(self):
+        '''
+        Creates VideoWriter object for output annotated video
+        '''
         dir = os.path.dirname(self.output_filepath)
         if dir != '':
             os.makedirs(dir, exist_ok=True)
@@ -48,11 +67,21 @@ class MultiObjectTracker():
             self.output_filepath, fourcc, cap_fps, (frame_width, frame_height))
 
     def get_frame_dimensions(self):
+        '''
+        Gets the frame dimensions of the input video
+
+        Returns
+        -------
+        Tuple of integers (frame_width, frame_height)
+        '''
         frame_width = int(self.video_in.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(self.video_in.get(cv2.CAP_PROP_FRAME_HEIGHT))
         return frame_width, frame_height
 
     def initialize_trackers(self):
+        '''
+        Initializes all trackers for the given input video
+        '''
         _, init_frame = self.video_in.read()
         self.number_of_frames = int(
             self.video_in.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -63,10 +92,14 @@ class MultiObjectTracker():
     def parse_hbox_json(self, input_bbox_json_filepath):
         '''
         Parses a json of initial conditions into a list of tracked objects.
-        The json is expected to be a list of elements with the following attributes:
+        The json is expected to be a list of dictionaries with the following keys:
         * Name: String. Name of the object to track. i.e 'player'
         * Id: Int. Id of the object to track.
         * Coords: List of 4 ints: x, y, width, height
+
+        Returns
+        -------
+        A list of TracedObjects corresponding to the given bbox json filepath
         '''
         with open(input_bbox_json_filepath, 'r') as f:
             list_of_dicts = list(json.load(f))
@@ -78,10 +111,18 @@ class MultiObjectTracker():
         for a_bbox_dict, a_color in zip(list_of_dicts, COLORS):
             list_of_tracked_objects.append(
                 TrackedObject(a_bbox_dict, a_color, self))
-        # TODO: Check that there are no two objects with the same name and id
+
         return list_of_tracked_objects
 
     def run_tracking(self):
+        '''
+        Runs tracking for all TrackedObjects for all frames for the given input
+        video filepath, saves annotated video in given output filepath
+
+        Returns
+        -------
+        A list of success rates corresponding to the tracked objects
+        '''
         if self.verbose:
             iterable_frames = tqdm(range(self.number_of_frames-5))
         else:
@@ -91,7 +132,7 @@ class MultiObjectTracker():
             _, frame = self.video_in.read()
 
             for a_tracked_object in self.tracked_objects:
-                a_tracked_object.update_tracker(frame, frame_number)
+                a_tracked_object.update_tracker(frame)
 
             self.video_out.write(frame)
 
@@ -105,9 +146,15 @@ class MultiObjectTracker():
                 for a_tracked_obj in self.tracked_objects]
 
     def print_final_report(self):
+        '''
+        Prints tracking final report
+        '''
         for a_tracked_object in self.tracked_objects:
             a_tracked_object.print_report()
 
     def print_if_verbose(self, text):
+        '''
+        Prints the given text if self.verbose is True
+        '''
         if self.verbose:
             print(text)

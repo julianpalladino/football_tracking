@@ -4,6 +4,9 @@ import cv2
 
 
 def convert_all_data_from_mkv_to_mp4(data_folder):
+    '''
+    Aux function to convert all mkv files in a given folder into mp4 files
+    '''
     for path, folder, files in os.walk(data_folder):
         for file in files:
             if file.endswith('.mkv'):
@@ -12,6 +15,10 @@ def convert_all_data_from_mkv_to_mp4(data_folder):
 
 
 def convert_from_mkv_to_mp4(mkv_filepath):
+    '''
+    Aux function to convert a given mkv file into a mp4 file
+    '''
+
     name, ext = os.path.splitext(mkv_filepath)
     out_name = name + ".mp4"
     ffmpeg.input(mkv_filepath).output(out_name).run()
@@ -25,7 +32,19 @@ def draw_text(img,
               font_scale=2,
               font_thickness=1
               ):
+    '''
+    Aux function which draws text over an image. Used to write text in frames'
+    annotations
 
+    Parameters
+    ----------
+    img: image to write onto
+    text: str, text to write
+    pos: int tuple (x,y), position where to write the text
+    font: cv2 font type, Font to use
+    font_scale: integer for scaling the font
+    font_thickness: integer which describes the thickness of the font
+    '''
     pos = (int(pos[0]-5), int(pos[1]-5))
     x, y = pos
     text_size, _ = cv2.getTextSize(text, font, font_scale, font_thickness)
