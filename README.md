@@ -1,42 +1,67 @@
 # OpenCV tracking
-Open source python module for multitracking objects over any given video. Mainly tested on tracking players over a football field.
+
+Python module for multitracking objects over any given video. Mainly tested on tracking players over a football field.
 
 ## Usage
+
 After cloning the repo just build the docker image
+
 ```
 docker build . -t tracker
 ```
+
 and run it with the desired parameters
+
 ```
-docker run -v "$PWD":/app tracker:latest \
+docker run -v "$PWD":/host_volume -w /app tracker:latest \
         -input_path <input video filepath> \
         -input_bbox_path <input bbox json filepath> \
         -output_path <output video filepath> \
         -method <tracking method>
 ```
+
 In which
-- `<input video filepath>`: filepath for a mp4 video to annotate
+
+- `<input video filepath>`: filepath for a mp4 video to annotate.
 - `<input bbox json filepath>`: filepath for a json file with initial bbox information. The json is expected to be a list of dictionaries with the following keys:
   - Name: String. Name of the object to track. i.e 'player'
   - Id: Int. Id of the object to track.
   - Coords: List of 4 ints determining the bounding box position and size: x, y, width, height
-- `<output video filepath>`: filepath for the output mp4 file to save
+- `<output video filepath>`: filepath for the output mp4 file to save.
 - `<tracking method>`: tracking method, should be one of the following `['dasiamrpn', 'tld', 'kcf', 'goturn', 'csrt', 'mil', 'boosting', 'mosse', 'medianflow']`
+
+** Note: ** The volume `/host_volume` is mounted to allow input and output paths from outside the container. See [this](https://flaviocopes.com/docker-access-files-outside-container/) for more info.
+
+For example:
+
+```
+docker run -v "$PWD":/app tracker:latest \
+        -input_path /app/data/messi1.mp4 \
+        -input_bbox_path /app/data/messi1_initial_conditions.json \
+        -output_path /app/output/messi1_tracked.mp4 \
+        -method csrt
+```
 
 **Note:** The recommended method for the given test files is CSRT.
 
 ## Testing
+
 To test the script with all 4 available videos and all available methods, build the docker image
+
 ```
 docker build . -t tracker
 ```
+
 and run it with the `-test` flag, which executes the pytest module
+
 ```
 docker run -v "$PWD":/app tracker:latest -test
 ```
+
 **Note:** When a tracking method fails to track an objet at least 70% of the frames, pytest will issue a warning. This can happen for less accurate methods like MedianFlow.
 
 ## Supported methods
+
 - [DaSiamRPN](https://arxiv.org/abs/1808.06048)
 - [TLD](http://vision.stanford.edu/teaching/cs231b_spring1415/papers/Kalal-PAMI.pdf)
 - [KCF](https://arxiv.org/abs/1404.7584)
@@ -47,8 +72,8 @@ docker run -v "$PWD":/app tracker:latest -test
 - [Mosse](https://www.cs.colostate.edu/~draper/papers/bolme_cvpr10.pdf)
 - [MedianFlow](http://kahlan.eps.surrey.ac.uk/featurespace/tld/Publications/2010_icpr.pdf)
 
+## Comparative examples: Boosting vs CSRT vs MedianFlow
 
-## Comparative examples Boosting vs CSRT vs MedianFlow
 We test a small subset of all methods over three videos.
 
 ### Example 1: Multiple tracking
@@ -79,7 +104,6 @@ Method: MedianFlow
 
 ![medianflow](https://user-images.githubusercontent.com/8797947/158605711-372af741-0285-4d18-9b9a-f103a6a18201.gif)
 
-
 ### Example: Managing occlusions, grainy picture and zoom
 
 Method: Boosting
@@ -93,5 +117,3 @@ Method: CSRT
 Method: MedianFlow
 
 ![medianflow](https://user-images.githubusercontent.com/8797947/158619367-4d5971dc-7ef1-4544-9338-e96a2b13259f.gif)
-
-

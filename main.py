@@ -1,8 +1,9 @@
-#!/usr/bin/python
+import argparse
+
+import pytest
+
 import config
 from object_tracker import MultiObjectTracker
-import argparse
-import pytest
 
 
 def main():

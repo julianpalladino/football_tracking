@@ -1,3 +1,3 @@
-cat goturn.caffemodel.zip.001 goturn.caffemodel.zip.002 \
-    goturn.caffemodel.zip.003 goturn.caffemodel.zip.004  > goturn.caffemodel.zip && \
-    unzip goturn.caffemodel.zip -d .
+cat model_files/goturn.caffemodel.zip.001 model_files/goturn.caffemodel.zip.002 \
+    model_files/goturn.caffemodel.zip.003 model_files/goturn.caffemodel.zip.004  > model_files/goturn.caffemodel.zip && \
+unzip model_files/goturn.caffemodel.zip -d .

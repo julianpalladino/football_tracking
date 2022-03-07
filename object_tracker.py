@@ -1,9 +1,11 @@
-import os
-from tracked_object import TrackedObject
 import json
-from colors import COLORS
+import os
+
 import cv2
 from tqdm import tqdm
+
+from colors import COLORS
+from tracked_object import TrackedObject
 
 
 class MultiObjectTracker():
@@ -20,6 +22,7 @@ class MultiObjectTracker():
     output_filepath: str, filepath for output annotated mp4 video
     verbose: bool, allows additional printing
     '''
+
     def __init__(self,
                  input_filepath,
                  input_bbox_json_filepath,
@@ -28,7 +31,10 @@ class MultiObjectTracker():
                  verbose=True):
 
         # Validation
-        assert input_filepath[-3:] == 'mp4', 'Only mp4 format is accepted'
+        assert input_filepath[-3:] == 'mp4', \
+            'Only mp4 format is accepted for input filepath'
+        assert output_filepath[-3:] == 'mp4', \
+            'Only mp4 format is accepted for output filepath'
 
         # Initialization
         self.verbose = verbose
